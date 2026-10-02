@@ -19,10 +19,24 @@ func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func (cfg *ApiConfig) Metrics(w http.ResponseWriter, _ *http.Request) {
-	io.WriteString(w, fmt.Sprintf("Hits: %d", int(cfg.fileserverHits.Load())))
+	w.Header().Set("Content-Type", "text/html")
+	io.WriteString(w, fmt.Sprintf(
+		`<html>
+		<body>
+			<h1>Welcome, Chirpy Admin</h1>
+			<p>Chirpy has been visited %d times!</p>
+		</body>
+		</html>`,
+		int(cfg.fileserverHits.Load())))
 }
 
 func (cfg *ApiConfig) Reset(w http.ResponseWriter, _ *http.Request) {
 	cfg.fileserverHits.Store(0)
 	io.WriteString(w, fmt.Sprintln("Hits counter reset to 0"))
+}
+
+func (cfg *ApiConfig) Health(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "OK\n")
 }

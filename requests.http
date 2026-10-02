@@ -1,0 +1,4 @@
+GET http://localhost:8080/admin/healthz
+GET http://localhost:8080/app/assets/logo.png
+GET http://localhost:8080/admin/metrics
+POST http://localhost:8080/admin/reset Content-Length: 0
