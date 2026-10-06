@@ -16,7 +16,7 @@ func HashPassword(password string) (string, error) {
 func CheckPassword(password string, hash string) (bool, error) {
 	hashedPassoword, err := HashPassword(password)
 	if err != nil {
-		return "", err
+		return false, err
 	}
 
 	if hashedPassoword == hash {

@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/goczangabor24/chirpy/internal/auth"
 	"github.com/goczangabor24/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -60,7 +61,8 @@ func (cfg *ApiConfig) Health(w http.ResponseWriter, _ *http.Request) {
 
 func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	type Parameters struct {
-		Email string `json:"email"`
+		HashedPassword string `json:"password"`
+		Email          string `json:"email"`
 	}
 
 	type ReturnVals struct {
@@ -79,9 +81,16 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hashedPassword, err := auth.HashPassword(params.HashedPassword)
+	if err != nil {
+		fmt.Printf("Error: %v", err)
+		return
+	}
+
 	createUserParams := database.CreateUserParams{
-		ID:    uuid.New(),
-		Email: params.Email,
+		ID:             uuid.New(),
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
 	}
 
 	response, err := cfg.Db.CreateUser(r.Context(), createUserParams)

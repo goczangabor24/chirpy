@@ -12,6 +12,15 @@ Content-Type: application/json
   "email": "nacho@pets.dog"
 }
 
+### CREATE USER WITH PASSWORD 
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+    "email":"goczangabor24@gmail.com",
+    "password":"Szevasztok3"
+}
+
 ### CREATE CHIRP (should return a cleaned JSON string)
 POST http://localhost:8080/api/chirps
 Content-Type: application/json
