@@ -109,6 +109,53 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 201, responseJSON)
 }
 
+func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
+	type Parameters struct {
+		Password string `json:"password"`
+		Email    string `json:"email"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var params Parameters
+	err := decoder.Decode(&params)
+	if err != nil {
+		log.Printf("Error decoding parameters: %v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	response, err := cfg.Db.Login(r.Context(), params.Email)
+	if err != nil {
+		respondWithError(w, 401, "Incorrect email or password")
+		return
+	}
+	correctPassword, err := auth.CheckPassword(params.Password, response.HashedPassword)
+	log.Printf("CheckPassword result: match=%v, err=%v", correctPassword, err)
+	if err != nil {
+		respondWithError(w, 401, "Incorrect email or password")
+		return
+	} else if !correctPassword {
+		respondWithError(w, 401, "Incorect email or password")
+		return
+	}
+
+	type returnVals struct {
+		ID        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Email     string    `json:"email"`
+	}
+
+	resp := returnVals{
+		ID:        response.ID,
+		CreatedAt: response.CreatedAt,
+		UpdatedAt: response.UpdatedAt,
+		Email:     response.Email,
+	}
+
+	respondWithJSON(w, 200, resp)
+}
+
 func (cfg *ApiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 	type Chirp struct {
 		ID        uuid.UUID `json:"id"`

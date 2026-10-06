@@ -48,6 +48,7 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", apiCfg.Chirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.GetChirp)
 	mux.HandleFunc("POST /api/users", apiCfg.CreateUser)
+	mux.HandleFunc("POST /api/login", apiCfg.Login)
 
 	log.Println("Server running on http://localhost:8080")
 

@@ -14,14 +14,14 @@ func HashPassword(password string) (string, error) {
 }
 
 func CheckPassword(password string, hash string) (bool, error) {
-	hashedPassoword, err := HashPassword(password)
+	match, err := argon2id.ComparePasswordAndHash(password, hash)
 	if err != nil {
 		return false, err
 	}
 
-	if hashedPassoword == hash {
-		return true, nil
-	} else {
+	if !match {
 		return false, nil
 	}
+
+	return true, nil
 }
