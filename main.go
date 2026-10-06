@@ -46,6 +46,7 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", apiCfg.Reset)
 	mux.HandleFunc("GET /api/chirps", apiCfg.GetAllChirps)
 	mux.HandleFunc("POST /api/chirps", apiCfg.Chirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.GetChirp)
 	mux.HandleFunc("POST /api/users", apiCfg.CreateUser)
 
 	log.Println("Server running on http://localhost:8080")

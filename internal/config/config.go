@@ -137,6 +137,49 @@ func (cfg *ApiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 	w.Write(dat)
 }
 
+func (cfg *ApiConfig) GetChirp(w http.ResponseWriter, r *http.Request) {
+	type Chirp struct {
+		ID        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Body      string    `json:"body"`
+		UserID    uuid.UUID `json:"user_id"`
+	}
+
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		w.WriteHeader(404)
+		fmt.Print("Error parsing the UUID")
+		return
+	}
+
+	chirp, err := cfg.Db.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		w.WriteHeader(404)
+		fmt.Printf("Chirp (ID: %v) doesn't exist in the database", chirpID)
+		return
+	}
+
+	var response Chirp
+
+	response = Chirp{
+		ID:        chirp.ID,
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body:      chirp.Body,
+		UserID:    chirp.ID,
+	}
+
+	dat, err := json.Marshal(response)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	w.Write(dat)
+}
+
 func (cfg *ApiConfig) Chirps(w http.ResponseWriter, r *http.Request) {
 	type Parameters struct {
 		Body   string    `json:"body"`
@@ -155,7 +198,7 @@ func (cfg *ApiConfig) Chirps(w http.ResponseWriter, r *http.Request) {
 	params := Parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		log.Printf("Error decoding parameters: %s", err)
+		log.Printf("coding parameters: %s", err)
 		w.WriteHeader(500)
 		return
 	}

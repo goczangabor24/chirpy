@@ -1,4 +1,7 @@
-###Get ALL CHIRPS
+### GET CHIRP
+GET http://localhost:8080/api/chirps/b4b07be0-c4bf-4fc1-bf3b-8831cfffef28
+
+###GET ALL CHIRPS
 GET http://localhost:8080/api/chirps
 
 ### CREATE USER (should return a cleaned JSON string)
@@ -14,8 +17,8 @@ POST http://localhost:8080/api/chirps
 Content-Type: application/json
 
 {
-  "body": "why doesn't the other work??",
-  "user_id": "c95e8daf-d236-4653-b868-e0fd397e3156"
+  "body": "what up man?",
+  "user_id": "44598f7a-345c-4c37-a53b-9509a08b1171"
 }
 
 ### CREATE CHIRP (should throw an error)
@@ -24,7 +27,7 @@ Content-Type: application/json
 
 {
     "body": "This will be an awfully long chirp, which is probably going to be longer than a 140 characters, therefore in this case the validator is supposed to render this test false, and after clicking on sending request it hopefully will.",
-    "user_id": "c95e8daf-d236-4653-b868-e0fd397e3156"
+    "user_id": "44598f7a-345c-4c37-a53b-9509a08b1171"
 }
 
 ### LOGO
