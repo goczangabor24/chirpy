@@ -1,4 +1,37 @@
-GET http://localhost:8080/admin/healthz
+###Get ALL CHIRPS
+GET http://localhost:8080/api/chirps
+
+### CREATE USER (should return a cleaned JSON string)
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "nacho@pets.dog"
+}
+
+### CREATE CHIRP (should return a cleaned JSON string)
+POST http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+  "body": "why doesn't the other work??",
+  "user_id": "c95e8daf-d236-4653-b868-e0fd397e3156"
+}
+
+### CREATE CHIRP (should throw an error)
+POST http://localhost:8080/api/chirps
+Content-Type: application/json
+
+{
+    "body": "This will be an awfully long chirp, which is probably going to be longer than a 140 characters, therefore in this case the validator is supposed to render this test false, and after clicking on sending request it hopefully will.",
+    "user_id": "c95e8daf-d236-4653-b868-e0fd397e3156"
+}
+
+### LOGO
 GET http://localhost:8080/app/assets/logo.png
+
+### METRICS
 GET http://localhost:8080/admin/metrics
-POST http://localhost:8080/admin/reset Content-Length: 0
+
+### RESET
+POST http://localhost:8080/admin/reset
