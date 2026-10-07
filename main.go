@@ -36,6 +36,7 @@ func main() {
 	var apiCfg config.ApiConfig
 	apiCfg.Db = dbQueries
 	apiCfg.Platform = os.Getenv("PLATFORM")
+	apiCfg.JWTSecret = os.Getenv("SECRET")
 
 	fileserver := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
 

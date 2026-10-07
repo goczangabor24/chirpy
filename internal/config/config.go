@@ -21,6 +21,7 @@ type ApiConfig struct {
 	FileserverHits atomic.Int32
 	Db             *database.Queries
 	Platform       string
+	JWTSecret      string
 }
 
 func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
@@ -111,8 +112,9 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 	type Parameters struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
+		Password         string `json:"password"`
+		Email            string `json:"email"`
+		ExpiresInSeconds int    `json:"expires_in_seconds"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -129,13 +131,26 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 401, "Incorrect email or password")
 		return
 	}
+
 	correctPassword, err := auth.CheckPassword(params.Password, response.HashedPassword)
-	log.Printf("CheckPassword result: match=%v, err=%v", correctPassword, err)
+
 	if err != nil {
 		respondWithError(w, 401, "Incorrect email or password")
 		return
 	} else if !correctPassword {
-		respondWithError(w, 401, "Incorect email or password")
+		respondWithError(w, 401, "Incorrect email or password")
+		return
+	}
+
+	if params.ExpiresInSeconds == 0 {
+		params.ExpiresInSeconds = 3600
+	} else if params.ExpiresInSeconds > 3600 {
+		params.ExpiresInSeconds = 3600
+	}
+
+	token, err := auth.MakeJWT(response.ID, cfg.JWTSecret, time.Second*time.Duration(params.ExpiresInSeconds))
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -144,6 +159,7 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 		Email     string    `json:"email"`
+		Token     string    `json:"token"`
 	}
 
 	resp := returnVals{
@@ -151,6 +167,7 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: response.CreatedAt,
 		UpdatedAt: response.UpdatedAt,
 		Email:     response.Email,
+		Token:     token,
 	}
 
 	respondWithJSON(w, 200, resp)
@@ -238,8 +255,8 @@ func (cfg *ApiConfig) GetChirp(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *ApiConfig) Chirps(w http.ResponseWriter, r *http.Request) {
 	type Parameters struct {
-		Body   string    `json:"body"`
-		UserID uuid.UUID `json:"user_id"`
+		Body  string `json:"body"`
+		Token string `json:"token"`
 	}
 
 	type ReturnVals struct {
@@ -255,7 +272,19 @@ func (cfg *ApiConfig) Chirps(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("coding parameters: %s", err)
-		w.WriteHeader(500)
+		w.WriteHeader(400)
+		return
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized")
+		return
+	}
+
+	validID, err := auth.ValidateJWT(token, cfg.JWTSecret)
+	if err != nil {
+		respondWithError(w, 401, "Unauthorized")
 		return
 	}
 
@@ -269,7 +298,7 @@ func (cfg *ApiConfig) Chirps(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Body:      replaceProfaneWords(params.Body),
-		UserID:    params.UserID,
+		UserID:    validID,
 	}
 
 	response, err := cfg.Db.CreateChirp(r.Context(), chirpParameters)
@@ -298,7 +327,7 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 
 	dat, err := json.Marshal(body)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(400)
 		return
 	}
 
@@ -310,7 +339,7 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	dat, err := json.Marshal(payload)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(400)
 		return
 	}
 
