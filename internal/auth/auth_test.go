@@ -3,10 +3,13 @@ package auth
 import (
 	"fmt"
 	"testing"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 func TestHashPassword(t *testing.T) {
-	result, err := HashPassword("Szevasztok3")
+	result, err := HashPassword("Something")
 	if err != nil {
 		t.Errorf("failed")
 	}
@@ -21,4 +24,9 @@ func TestCheckPassword(t *testing.T) {
 		t.Errorf("failed")
 	}
 	fmt.Println(result)
+}
+
+func TestMakeJWT(t *testing.T) {
+	duration := 2 * time.Second
+	fmt.Println(MakeJWT(uuid.New(), "mySecret", time.Duration(duration)))
 }
